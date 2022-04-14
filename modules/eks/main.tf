@@ -1,17 +1,16 @@
 resource "aws_eks_cluster" "eks_cluster" {
-  name     = "${var.cluster_name}-${var.environment}"
+  name = "${var.cluster_name}-${var.environment}"
    
   role_arn = aws_iam_role.eks_cluster_role.arn
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   
-  
-   vpc_config {
-    subnet_ids =  concat(var.public_subnets, var.private_subnets)
+  vpc_config {
+    subnet_ids = concat(var.public_subnets, var.private_subnets)
   }
    
-   timeouts {
-     delete    =  "30m"
-   }
+  timeouts {
+    delete = "30m"
+  }
   
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSClusterPolicy1,
@@ -37,7 +36,6 @@ resource "aws_iam_policy" "AmazonEKSClusterCloudWatchMetricsPolicy" {
 }
 EOF
 }
-
 
 resource "aws_iam_role" "eks_cluster_role" {
   name = "${var.cluster_name}-cluster-role"
@@ -82,7 +80,7 @@ resource "aws_cloudwatch_log_group" "cloudwatch_log_group" {
   retention_in_days = 30
 
   tags = {
-    Name        = "${var.cluster_name}-${var.environment}-eks-cloudwatch-log-group"
+    Name = "${var.cluster_name}-${var.environment}-eks-cloudwatch-log-group"
   }
 }
 
@@ -95,8 +93,6 @@ resource "aws_eks_fargate_profile" "eks_fargate" {
   selector {
     namespace = "${var.fargate_namespace}"
   }
-
-  
 
   timeouts {
     create   = "30m"
@@ -137,13 +133,10 @@ resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
   role       = aws_iam_role.eks_fargate_role.name
 }
 
-
 resource "aws_iam_role_policy_attachment" "AmazonEKSVPCResourceController" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
   role       = aws_iam_role.eks_fargate_role.name
 }
-
-
 
 resource "aws_eks_node_group" "eks_node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name

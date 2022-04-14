@@ -7,9 +7,8 @@ variable "environment" {
 }
 
 variable "eks_node_group_instance_types" {
-  description  = "Instance type of node group"
+  description = "Instance type of node group"
 }
-
 
 variable "private_subnets" {
   description = "List of private subnet IDs"

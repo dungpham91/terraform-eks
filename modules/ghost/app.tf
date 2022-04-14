@@ -1,7 +1,7 @@
 resource "kubernetes_namespace" "fargate" {
   metadata {
     labels = {
-      app = "owncloud"
+      app = "ghost"
     }
     name = "fargate-node"
   }
@@ -9,10 +9,10 @@ resource "kubernetes_namespace" "fargate" {
 
 resource "kubernetes_deployment" "app" {
   metadata {
-    name      = "owncloud-server"
+    name      = "ghost-server"
     namespace = "fargate-node"
     labels    = {
-      app = "owncloud"
+      app = "ghost"
     }
   }
 
@@ -21,46 +21,46 @@ resource "kubernetes_deployment" "app" {
 
     selector {
       match_labels = {
-        app = "owncloud"
+        app = "ghost"
       }
     }
 
     template {
       metadata {
         labels = {
-          app = "owncloud"
+          app = "ghost"
         }
       }
 
       spec {
         container {
-          image = "owncloud"
-          name  = "owncloud-server"
+          image = "ghost"
+          name  = "ghost-server"
 
           port {
-            container_port = 80
+            container_port = 2368
           }
         }
       }
     }
   }
-   depends_on = [kubernetes_namespace.fargate]
 
+  depends_on = [kubernetes_namespace.fargate]
 }
 
 resource "kubernetes_service" "app" {
   metadata {
-    name      = "owncloud-service"
+    name      = "ghost-service"
     namespace = "fargate-node"
   }
   spec {
     selector = {
-      app = "owncloud"
+      app = "ghost"
     }
 
     port {
       port        = 80
-      target_port = 80
+      target_port = 2368
       protocol    = "TCP"
     }
 
@@ -72,7 +72,7 @@ resource "kubernetes_service" "app" {
 
 resource "kubernetes_ingress" "app" {
   metadata {
-    name      = "owncloud-lb"
+    name      = "ghost-lb"
     namespace = "fargate-node"
     annotations = {
       "kubernetes.io/ingress.class"           = "alb"
@@ -80,13 +80,13 @@ resource "kubernetes_ingress" "app" {
       "alb.ingress.kubernetes.io/target-type" = "ip"
     }
     labels = {
-        "app" = "owncloud"
+        "app" = "ghost"
     }
   }
 
   spec {
       backend {
-        service_name = "owncloud-service"
+        service_name = "ghost-service"
         service_port = 80
       }
     rule {
@@ -94,7 +94,7 @@ resource "kubernetes_ingress" "app" {
         path {
           path = "/"
           backend {
-            service_name = "owncloud-service"
+            service_name = "ghost-service"
             service_port = 80
           }
         }

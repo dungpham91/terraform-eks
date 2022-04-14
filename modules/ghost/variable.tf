@@ -1,5 +1,5 @@
 variable "cluster_id" {
-    description    =  "Put your cluster id here"
+  description    =  "Put your cluster id here"
 }
 
 variable "vpc_id" {

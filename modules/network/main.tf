@@ -1,5 +1,4 @@
-
- resource "aws_vpc" "main" {
+resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   
@@ -18,15 +17,12 @@ resource "aws_subnet" "public" {
   depends_on = [ aws_vpc.main ]
   
   tags = {
-
-      "kubernetes.io/cluster/${var.cluster_name}-${var.environment}" = "shared"
-      "kubernetes.io/role/elb" = 1
+    "kubernetes.io/cluster/${var.cluster_name}-${var.environment}" = "shared"
+    "kubernetes.io/role/elb" = 1
     Name   = "node-group-subnet-${count.index + 1}-${var.environment}"
     state  = "public"
   }
 }
-
-
 
 resource "aws_subnet" "private" {
   vpc_id                   = aws_vpc.main.id
@@ -36,10 +32,9 @@ resource "aws_subnet" "private" {
   depends_on = [ aws_vpc.main ]
   
   tags = {
-
-        "kubernetes.io/cluster/${var.cluster_name}-${var.environment}" = "shared"
-        "kubernetes.io/role/internal-elb" = 1
-      "Name"   = "fargate-subnet-${count.index + 1}-${var.environment}"
+    "kubernetes.io/cluster/${var.cluster_name}-${var.environment}" = "shared"
+    "kubernetes.io/role/internal-elb" = 1
+    "Name"   = "fargate-subnet-${count.index + 1}-${var.environment}"
     "state"  = "private"
   }
 }
@@ -83,7 +78,7 @@ resource "aws_route_table" "internet-route" {
   }
 }
 
-  resource "aws_route_table" "nat-route" {
+resource "aws_route_table" "nat-route" {
   vpc_id = aws_vpc.main.id
   count  = length(var.private_subnets_cidr)
   route {
@@ -101,12 +96,10 @@ resource "aws_route_table_association" "public" {
   count          = length(var.public_subnets_cidr)
   subnet_id      = element(aws_subnet.public.*.id, count.index)
   route_table_id = aws_route_table.internet-route.id
-  
   depends_on = [ aws_route_table.internet-route ,
                  aws_subnet.public
   ]
 }
-
 
 resource "aws_route_table_association" "private" {
   count          = length(var.private_subnets_cidr)
