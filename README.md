@@ -11,8 +11,18 @@ Some of the goals this project accomplishes:
 - Deploy a monitoring system using Grafana and Prometheus to monitor system resources.
 - Test some cases after the deployment is complete, for example: auto scaling when CPU is high, fault injection simulator,...
 
+## Table of contents
+- [1. Prepare](#1-prepare)
+    - [1.1 AWS CLI](#11-aws-cli)
+    - [1.2 Terraform](#12-terraform)
+    - [1.3 Kubernetes CLI](#13-kubernetes-cli)
+- [2. Getting started](#2-getting-started)
+    - [2.1 Create an S3 bucket to use as a backend for Terraform](#21-create-an-s3-bucket-to-use-as-a-backend-for-terraform)
+        - [2.1.1 Move into the folder s3-backend change the required value](#211-move-into-the-folder-s3-backend-change-the-required-value)
+        - [2.1.2 Create S3 bucket for Terraform backend](#212-create-s3-bucket-for-terraform-backend)
+
+
 ## 1. Prepare
----
 
 ### 1.1 AWS CLI
 
@@ -37,7 +47,6 @@ $ sudo apt-get update && sudo apt-get install terraform
 To install Kubernetes CLI, follow the instructions of this page (https://kubernetes.io/docs/tasks/tools) and if you are using Ubuntu computer follow this page (https://kubernetes.io/docs/tasks/tools/install-kubectl-linux).
 
 ## 2. Getting started
----
 
 ### 2.1 Create an S3 bucket to use as a backend for Terraform
 
