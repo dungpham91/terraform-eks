@@ -20,6 +20,7 @@ Some of the goals this project accomplishes:
     - [2.1 Create an S3 bucket to use as a backend for Terraform](#21-create-an-s3-bucket-to-use-as-a-backend-for-terraform)
         - [2.1.1 Move into the folder s3-backend change the required value](#211-move-into-the-folder-s3-backend-change-the-required-value)
         - [2.1.2 Create S3 bucket for Terraform backend](#212-create-s3-bucket-for-terraform-backend)
+- [Software version](#software-version)
 
 
 ## 1. Prepare
@@ -75,3 +76,10 @@ $ terraform apply # Implement resource creation
 When the `terraform apply` command finishes, you will get an information on the terminal window like the image below. Save this information and use it in the next section.
 
 ![01-create-s3-backend](./images/01-create-s3-backend.jpg)
+
+## Software version
+
+|  Software |  Version |
+|---|---|
+| AWS CLI | 1.18.69 |
+|  Terraform | v1.1.8 |
