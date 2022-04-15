@@ -13,10 +13,18 @@ resource "aws_security_group" "data" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description      = "Traffic"
-    from_port        = 3306
-    to_port          = 3306
-    protocol         = "tcp"
+    description = "Allow SQL DB Access only for port 3306"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "TCP"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -25,14 +33,19 @@ resource "aws_security_group" "data" {
 
 }
 
-data "aws_secretsmanager_secret_version" "credentials" {
-  secret_id = "${var.secret_id}"
+resource "random_password" "master"{
+  length           = 16
+  special          = true
+  override_special = "_!%^"
 }
- 
-locals {
-  cred = jsondecode(
-    data.aws_secretsmanager_secret_version.credentials.secret_string
-  )
+
+resource "aws_secretsmanager_secret" "credentials" {
+  name = "${var.secret_id}"
+}
+
+resource "aws_secretsmanager_secret_version" "credentials" {
+  secret_id     = aws_secretsmanager_secret.credentials.id
+  secret_string = random_password.master.result
 }
 
 resource "aws_db_instance" "db" {
@@ -46,8 +59,8 @@ resource "aws_db_instance" "db" {
   publicly_accessible    = false
   db_subnet_group_name   = aws_db_subnet_group.Groups.name
   vpc_security_group_ids = [aws_security_group.data.id]
-  username               = local.cred.username
-  password               = local.cred.password
+  username               = "dbadmin"
+  password               = random_password.master.result
 
   depends_on = [ aws_db_subnet_group.Groups, aws_security_group.data ]
 }

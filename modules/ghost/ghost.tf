@@ -1,3 +1,12 @@
+data "terraform_remote_state" "main" {
+  backend = "s3"
+  config = {
+    bucket  = "eks-cluster-s3-backend"
+    key     = "eks-cluster"
+    region  = "ap-southeast-1"
+  }
+}
+
 resource "kubernetes_namespace" "fargate" {
   metadata {
     labels = {
@@ -39,6 +48,31 @@ resource "kubernetes_deployment" "app" {
 
           port {
             container_port = 2368
+          }
+
+          env {
+            name  = "database__client"
+            value = "mysql"
+          }
+          env {
+            name  = "database__connection__host"
+            value = "${data.terraform_remote_state.main.outputs.db_host}"
+          }
+          env {
+            name  = "database__connection__user"
+            value = "dbadmin"
+          }
+          env {
+            name  = "database__connection__password"
+            value = "${data.terraform_remote_state.main.outputs.db_password}"
+          }
+          env {
+            name  = "database__connection__database"
+            value = "ghost"
+          }
+          env {
+            name  = "url"
+            value = "${data.terraform_remote_state.main.outputs.alb_hostname}"
           }
         }
       }

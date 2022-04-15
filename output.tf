@@ -1,18 +1,37 @@
-data "aws_db_instance" "database" {
-  db_instance_identifier = "${var.identifier}-${var.environment}"
+output "db_host" {
+  value = "${module.database.db_host}"
 }
 
-data "kubernetes_ingress" "address" {
-  metadata {
-    name = "ghost-lb"
-    namespace = "fargate-node"
-  }
+output "db_name" {
+  value = "${module.database.db_name}"
 }
 
-output "database_endpoint" {
-  value = "${data.aws_db_instance.database.address}"
+output "db_user" {
+  value = "${module.database.db_username}"
 }
 
-output "server_dns" {
-  value = "${data.kubernetes_ingress.address.load_balancer_ingress}"
+output "db_password" {
+  value = "${module.database.db_password}"
+}
+
+output "alb_hostname" {
+  value = "${module.ghost.load_balancer_hostname}"
+}
+
+output "alb_ip" {
+  value = "${module.ghost.load_balancer_ip}"
+}
+
+output "eks_cluster_id" {
+  value = "${module.eks.cluster_id}"
+}
+
+output "eks_cluster_name" {
+  value = "${module.eks.cluster_name}"
+}
+
+data "aws_region" "current" {}
+
+output "eks_region" {
+  value = "${data.aws_region.current.name}"
 }

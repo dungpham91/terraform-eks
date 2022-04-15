@@ -1,5 +1,5 @@
 environment                  = "prod"
-cluster_name                 =  "eks"
+cluster_name                 =  "dungpham"
 vpc_cidr                     =  "172.16.0.0/16"
 vpc_name                     =  "main"
 public_subnets_cidr          =  ["172.16.1.0/24", "172.16.2.0/24", "172.16.3.0/24"]
@@ -12,7 +12,7 @@ eks_node_group_instance_types=  "t2.micro"
 fargate_namespace            =  "fargate-node"
 secret_id                    =  "database"
 identifier                   =  "database"
-allocated_storage            =  20
+allocated_storage            =  10
 storage_type                 =  "gp2"
 engine                       =  "mysql"
 engine_version               =  5.7

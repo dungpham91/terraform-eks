@@ -28,13 +28,6 @@ module "eks" {
   fargate_namespace                   =  var.fargate_namespace
 }
 
-module "ghost" {
-  source                              =  "./modules/ghost"
-  cluster_id                          =  module.eks.cluster_id    
-  vpc_id                              =  module.network.vpc_id
-  cluster_name                        =  module.eks.cluster_name
-}
-
 module "database" {
   source                              =  "./modules/database"
   secret_id                           =  var.secret_id
@@ -48,4 +41,11 @@ module "database" {
   environment                         =  var.environment
   vpc_id                              =  module.network.vpc_id
   private_subnets                     =  module.network.aws_subnets_private
+}
+
+module "ghost" {
+  source                              =  "./modules/ghost"
+  cluster_id                          =  module.eks.cluster_id    
+  vpc_id                              =  module.network.vpc_id
+  cluster_name                        =  module.eks.cluster_name
 }
