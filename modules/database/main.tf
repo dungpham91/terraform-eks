@@ -62,5 +62,8 @@ resource "aws_db_instance" "db" {
   username               = "dbadmin"
   password               = random_password.master.result
 
-  depends_on = [ aws_db_subnet_group.Groups, aws_security_group.data ]
+  depends_on = [
+    aws_db_subnet_group.Groups,
+    aws_security_group.data
+  ]
 }

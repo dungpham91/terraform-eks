@@ -18,3 +18,4 @@ variable "engine" {}
 variable "engine_version" {}
 variable "instance_class" {}
 variable "database_name" {}
+variable "ghost_domain" {}

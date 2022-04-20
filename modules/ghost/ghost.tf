@@ -1,25 +1,40 @@
-data "terraform_remote_state" "main" {
-  backend = "s3"
-  config = {
-    bucket  = "dungpham-s3-backend"
-    key     = "eks-cluster"
-    region  = "ap-southeast-1"
-  }
-}
-
-resource "kubernetes_namespace" "fargate" {
+resource "kubernetes_namespace" "ghost-ns" {
   metadata {
     labels = {
       app = "ghost"
     }
-    name = "fargate-node"
+    name = "ghost-ns"
+  }
+}
+
+resource "kubernetes_persistent_volume_claim" "ghost-pvc" {
+  metadata {
+    name = "ghost-pvc"
+    annotations = {
+      "volume.beta.kubernetes.io/storage-class" = "ghost-efs-sc"
+    }
+    namespace = "ghost-ns"
+    labels = {
+      vol = "ghost-pvc"
+    }
+  }
+  spec {
+    access_modes = ["ReadWriteMany"]
+    resources {
+      requests = {
+        storage = "5Gi"
+      }
+    }
+  }
+  timeouts {
+    create = "60m"
   }
 }
 
 resource "kubernetes_deployment" "app" {
   metadata {
     name      = "ghost-server"
-    namespace = "fargate-node"
+    namespace = "ghost-ns"
     labels    = {
       app = "ghost"
     }
@@ -50,13 +65,18 @@ resource "kubernetes_deployment" "app" {
             container_port = 2368
           }
 
+          volume_mount {
+            name = "ghost-persistent-storage"
+            mount_path = "/var/lib/ghost/content"
+          }
+
           env {
             name  = "database__client"
             value = "mysql"
           }
           env {
             name  = "database__connection__host"
-            value = "${data.terraform_remote_state.main.outputs.db_host}"
+            value = "${var.database_host}"
           }
           env {
             name  = "database__connection__user"
@@ -64,7 +84,7 @@ resource "kubernetes_deployment" "app" {
           }
           env {
             name  = "database__connection__password"
-            value = "${data.terraform_remote_state.main.outputs.db_password}"
+            value = "${var.database_password}"
           }
           env {
             name  = "database__connection__database"
@@ -72,20 +92,28 @@ resource "kubernetes_deployment" "app" {
           }
           env {
             name  = "url"
-            value = "${data.terraform_remote_state.main.outputs.alb_hostname}"
+            value = "${var.ghost_domain}"
+          }
+        }
+        volume {
+          name = "ghost-persistent-storage"
+          persistent_volume_claim {
+            claim_name = "ghost-pvc"
           }
         }
       }
     }
   }
 
-  depends_on = [kubernetes_namespace.fargate]
+  depends_on = [
+    kubernetes_namespace.ghost-ns
+  ]
 }
 
 resource "kubernetes_service" "app" {
   metadata {
     name      = "ghost-service"
-    namespace = "fargate-node"
+    namespace = "ghost-ns"
   }
   spec {
     selector = {
@@ -107,7 +135,7 @@ resource "kubernetes_service" "app" {
 resource "kubernetes_ingress" "app" {
   metadata {
     name      = "ghost-lb"
-    namespace = "fargate-node"
+    namespace = "ghost-ns"
     annotations = {
       "kubernetes.io/ingress.class"           = "alb"
       "alb.ingress.kubernetes.io/scheme"      = "internet-facing"

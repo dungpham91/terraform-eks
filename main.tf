@@ -43,9 +43,23 @@ module "database" {
   private_subnets                     =  module.network.aws_subnets_private
 }
 
+module "efs" {
+  source                              = "./modules/efs"
+  vpc_id                              =  module.network.vpc_id
+  private_subnets_cidr                =  var.private_subnets_cidr
+  private_subnets                     =  module.network.aws_subnets_private
+  depends_on = [
+    module.network,
+    module.ghost
+  ]
+}
+
 module "ghost" {
   source                              =  "./modules/ghost"
   cluster_id                          =  module.eks.cluster_id    
   vpc_id                              =  module.network.vpc_id
   cluster_name                        =  module.eks.cluster_name
+  database_host                       =  module.database.db_host
+  database_password                   =  module.database.db_password
+  ghost_domain                        =  var.ghost_domain
 }
