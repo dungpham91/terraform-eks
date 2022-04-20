@@ -21,3 +21,7 @@ variable "database_password" {
 variable "ghost_domain" {
   description = "Define URL for Ghost application"
 }
+
+variable "size_ghost_pvc" {
+  description = "Size of Ghost persistent volume claim"
+}

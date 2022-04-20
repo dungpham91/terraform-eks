@@ -9,3 +9,7 @@ variable "private_subnets_cidr" {
 variable "private_subnets" {
   description = "List of private subnet IDs"
 }
+
+variable "cluster_id" {
+  description = "Put your cluster id here"
+}

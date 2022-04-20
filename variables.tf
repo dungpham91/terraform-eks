@@ -19,3 +19,4 @@ variable "engine_version" {}
 variable "instance_class" {}
 variable "database_name" {}
 variable "ghost_domain" {}
+variable "size_ghost_pvc" {}

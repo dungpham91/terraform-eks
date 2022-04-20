@@ -19,3 +19,4 @@ engine_version               =  5.7
 instance_class               =  "db.t2.micro"
 database_name                =  "db"
 ghost_domain                 =  "dungpham.local"
+size_ghost_pvc               =  "100Mi"

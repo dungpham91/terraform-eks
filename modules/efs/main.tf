@@ -1,13 +1,61 @@
-data "aws_efs_file_system" "ghost-efs" {
-  creation_token = "ghost-efs"
+data "aws_eks_cluster" "cluster" {
+  name = var.cluster_id
 }
 
-resource "kubernetes_storage_class" "ghost-efs-sc" {
+data "aws_eks_cluster_auth" "cluster" {
+  name = var.cluster_id
+}
+
+data "aws_caller_identity" "current" {}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
+}
+
+resource "kubernetes_service_account" "ghost-efs-provisioner" {
   metadata {
-    name = "ghost-efs-sc"
+    name      = "ghost-efs-provisioner"
+    namespace = "ghost-ns"
   }
-  storage_provisioner = "aws-efs/tf-eks-sc"
-  reclaim_policy      = "Retain"
+  automount_service_account_token = true
+}
+
+resource "kubernetes_cluster_role" "ghost-efs-provisioner-runner" {
+  metadata {
+    name = "ghost-efs-provisioner-runner"
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["persistentvolumes"]
+    verbs      = ["get", "list", "watch", "create", "delete"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["persistentvolumeclaims"]
+    verbs      = ["get", "list", "watch", "update"]
+  }
+
+  rule {
+    api_groups = ["storage.k8s.io"]
+    resources  = ["storageclasses"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["events"]
+    verbs      = ["create", "update", "patch"]
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["endpoints"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch"]
+  }
 }
 
 resource "kubernetes_cluster_role_binding" "ghost-efs-rb" {
@@ -17,13 +65,55 @@ resource "kubernetes_cluster_role_binding" "ghost-efs-rb" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = "cluster-admin"
+    name      = "ghost-efs-provisioner-runner"
   }
   subject {
     kind      = "ServiceAccount"
-    name      = "default"
+    name      = "ghost-efs-provisioner"
     namespace = "ghost-ns"
   }
+}
+
+resource "kubernetes_role" "leader-locking-efs-provisioner" {
+  metadata {
+    name      = "leader-locking-efs-provisioner"
+    namespace = "ghost-ns"
+  }
+  rule {
+    api_groups = [""]
+    resources  = ["endpoints"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch"]
+  }
+}
+
+resource "kubernetes_role_binding" "leader-locking-efs-provisioner" {
+  metadata {
+    name      = "leader-locking-efs-provisioner"
+    namespace = "ghost-ns"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "leader-locking-efs-provisioner"
+  }
+  subject {
+    kind      = "ServiceAccount"
+    name      = "ghost-efs-provisioner"
+    namespace = "ghost-ns"
+  }
+  subject {
+    kind      = "Group"
+    name      = "system:masters"
+    api_group = "rbac.authorization.k8s.io"
+  }
+}
+
+resource "kubernetes_storage_class" "ghost-efs-sc" {
+  metadata {
+    name = "ghost-efs-sc"
+  }
+  storage_provisioner = "example.com/aws-efs"
+  reclaim_policy      = "Retain"
 }
 
 resource "kubernetes_deployment" "ghost-efs-provisioner" {
@@ -44,25 +134,25 @@ resource "kubernetes_deployment" "ghost-efs-provisioner" {
     }
     selector {
       match_labels = {
-        app = "ghost-efs"
+        app = "ghost-efs-provisioner"
       }
     }
 
     template {
       metadata {
         labels = {
-          app = "ghost-efs"
+          app = "ghost-efs-provisioner"
         }
       }
 
       spec {
         automount_service_account_token = true
         container {
-          image = "quay.io/external_storage/efs-provisioner:v0.1.0"
-          name  = "ghost-efs-provision"
+          image = "quay.io/external_storage/efs-provisioner:latest"
+          name  = "ghost-efs-provisioner"
           env {
             name  = "FILE_SYSTEM_ID"
-            value = data.aws_efs_file_system.ghost-efs.file_system_id
+            value = aws_efs_file_system.ghost-efs.id
           }
           env {
             name  = "AWS_REGION"
@@ -80,8 +170,8 @@ resource "kubernetes_deployment" "ghost-efs-provisioner" {
         volume {
           name = "pv-volume"
           nfs {
-            server = data.aws_efs_file_system.ghost-efs.dns_name
-            path   = "/"
+            server = aws_efs_file_system.ghost-efs.dns_name
+            path   = "/persistentvolumes"
           }
         }
       }

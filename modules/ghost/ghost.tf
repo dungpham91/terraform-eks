@@ -19,15 +19,15 @@ resource "kubernetes_persistent_volume_claim" "ghost-pvc" {
     }
   }
   spec {
-    access_modes = ["ReadWriteMany"]
+    access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "5Gi"
+        storage = var.size_ghost_pvc
       }
     }
   }
   timeouts {
-    create = "60m"
+    create = "10m"
   }
 }
 
@@ -41,7 +41,7 @@ resource "kubernetes_deployment" "app" {
   }
 
   spec {
-    replicas = 2
+    replicas = 1
 
     selector {
       match_labels = {
@@ -106,7 +106,8 @@ resource "kubernetes_deployment" "app" {
   }
 
   depends_on = [
-    kubernetes_namespace.ghost-ns
+    kubernetes_namespace.ghost-ns,
+    kubernetes_persistent_volume_claim.ghost-pvc
   ]
 }
 
