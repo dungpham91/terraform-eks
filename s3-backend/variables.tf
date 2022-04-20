@@ -5,7 +5,7 @@ variable "region" {
 
 variable "project" {
   description = "The project name to use for unique resource naming"
-  default     = "eks-cluster"
+  default     = "dungpham"
   type        = string
 }
 

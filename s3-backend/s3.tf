@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "s3_bucket" {
   bucket        = "${var.project}-s3-backend"
-  force_destroy = false
+  force_destroy = true
 
   tags = local.tags
 }

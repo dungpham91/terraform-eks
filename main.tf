@@ -1,7 +1,7 @@
 provider "aws" {
   region = "ap-southeast-1"
   profile = "default"
-  shared_credentials_files = ["/home/dungpham/.aws/credentials"]
+  shared_credentials_files = ["/home/dungpt/.aws/credentials"]
 }
 
 module "network" {

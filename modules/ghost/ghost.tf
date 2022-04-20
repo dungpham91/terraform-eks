@@ -1,7 +1,7 @@
 data "terraform_remote_state" "main" {
   backend = "s3"
   config = {
-    bucket  = "eks-cluster-s3-backend"
+    bucket  = "dungpham-s3-backend"
     key     = "eks-cluster"
     region  = "ap-southeast-1"
   }
